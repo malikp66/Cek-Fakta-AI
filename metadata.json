@@ -1,0 +1,10 @@
+{
+  "name": "CekFakta AI",
+  "description": "Indonesian AI-Powered Hoax Detection Platform",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
