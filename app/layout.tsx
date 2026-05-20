@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="id" className={cn("font-sans", inter.variable, spaceGrotesk.variable)}>
-      <body className="antialiased bg-slate-50 text-slate-900 h-screen overflow-hidden flex flex-col" suppressHydrationWarning>
-        <main className="flex-1 flex flex-col overflow-hidden">
+      <body className="antialiased bg-slate-50 text-slate-900 min-h-screen flex flex-col" suppressHydrationWarning>
+        <main className="flex-1 flex flex-col">
           {children}
         </main>
         <footer className="h-12 bg-slate-900 flex flex-col sm:flex-row items-center justify-between px-8 text-[10px] text-slate-500 uppercase tracking-widest shrink-0 gap-2 sm:gap-0 justify-center sm:justify-between py-2 sm:py-0 hidden md:flex">
