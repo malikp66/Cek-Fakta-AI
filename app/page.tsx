@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  ShieldCheck, AlertTriangle, XCircle, FileText, Image as ImageIcon, 
+import { ShieldCheck, AlertTriangle, XCircle, FileText, Image as ImageIcon, 
   Mic, Search, BrainCircuit, HeartHandshake, Link as LinkIcon, AlertOctagon, Info,
-  ArrowRight, Play, Activity, Target, Zap, Globe, Shield, Eye
+  ArrowRight, Play, Activity, Target, Zap, Globe, Shield, Eye, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import ShaderBackground from "@/components/shader-background";
 
 type ResultData = {
   verdict: 'Kemungkinan Valid' | 'Perlu Verifikasi' | 'Kemungkinan Hoax';
@@ -55,6 +55,22 @@ const Navbar = () => {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("text");
+  const [usageCount, setUsageCount] = useState(0);
+  const MAX_USAGE_PER_DAY = 5;
+
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const storedDate = localStorage.getItem('cekfakta_usage_date');
+    const storedCount = localStorage.getItem('cekfakta_usage_count');
+
+    if (storedDate !== today) {
+      localStorage.setItem('cekfakta_usage_date', today);
+      localStorage.setItem('cekfakta_usage_count', '0');
+      setUsageCount(0);
+    } else {
+      setUsageCount(parseInt(storedCount || '0', 10));
+    }
+  }, []);
   const [textInput, setTextInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -129,6 +145,11 @@ export default function Home() {
       return;
     }
 
+    if (usageCount >= MAX_USAGE_PER_DAY) {
+      toast.error(`Batas Limit Harian Tercapai! Anda sudah menggunakan ${MAX_USAGE_PER_DAY} pengecekan hari ini. Silakan coba lagi besok.`);
+      return;
+    }
+
     setIsAnalyzing(true);
     setResult(null);
 
@@ -157,6 +178,11 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
 
       setResult(data);
+      
+      const newCount = usageCount + 1;
+      setUsageCount(newCount);
+      localStorage.setItem('cekfakta_usage_count', newCount.toString());
+      
       toast.success("Analisis selesai!");
     } catch (err: any) {
       toast.error(err.message || "Terjadi kesalahan.");
@@ -183,7 +209,8 @@ export default function Home() {
 
       {/* HERO SECTION */}
       <section className="relative px-6 py-20 lg:py-32 flex flex-col items-center text-center overflow-hidden">
-          <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-slate-50 -z-10"></div>
+          <ShaderBackground />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-slate-50/50 to-slate-50 -z-10"></div>
           
           <motion.div 
               initial={{ opacity: 0, y: 30 }}
@@ -347,10 +374,26 @@ export default function Home() {
                       <p className="text-slate-500 leading-relaxed">Setiap kesimpulan AI divalidasi silang menggunakan mesin pencari khusus, memprioritaskan situs resmi kesehatan dan pemerintah.</p>
                   </div>
                   <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100"><Shield className="w-4 h-4 text-emerald-500"/><span className="font-bold text-xs text-slate-700">Kominfo RI</span></div>
-                        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100"><Shield className="w-4 h-4 text-emerald-500"/><span className="font-bold text-xs text-slate-700">Kemenkes</span></div>
-                        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100"><Shield className="w-4 h-4 text-emerald-500"/><span className="font-bold text-xs text-slate-700">TurnBackHoax</span></div>
-                        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100"><Shield className="w-4 h-4 text-emerald-500"/><span className="font-bold text-xs text-slate-700">WHO Guidelines</span></div>
+                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Logo_of_the_Ministry_of_Communications_and_Information_Technology_of_the_Republic_of_Indonesia.svg/512px-Logo_of_the_Ministry_of_Communications_and_Information_Technology_of_the_Republic_of_Indonesia.svg.png" alt="Kominfo RI" className="w-6 h-6 object-contain" />
+                            <span className="font-bold text-xs text-slate-700">Kominfo RI</span>
+                        </div>
+                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Logo_kementerian_kesehatan_republik_indonesia_2016.svg/512px-Logo_kementerian_kesehatan_republik_indonesia_2016.svg.png" alt="Kemenkes" className="w-6 h-6 object-contain" />
+                            <span className="font-bold text-xs text-slate-700">Kemenkes</span>
+                        </div>
+                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Logo_MAFINDO.png" alt="TurnBackHoax / MAFINDO" className="w-10 h-6 object-contain -ml-1" />
+                            <span className="font-bold text-xs text-slate-700">TurnBackHoax</span>
+                        </div>
+                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/WHO_logo.svg/512px-WHO_logo.svg.png" alt="WHO" className="w-6 h-6 object-contain" />
+                            <span className="font-bold text-xs text-slate-700">WHO Guidelines</span>
+                        </div>
                   </div>
               </div>
           </div>
@@ -451,7 +494,35 @@ export default function Home() {
                           </div>
                         </TabsContent>
 
-                        <div className="mt-auto pt-6">
+                        <div className="mt-auto pt-4 flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 px-3 py-3 bg-slate-100/50 rounded-xl border border-slate-200/50 mb-2 mt-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                                      <Zap className="w-3 h-3 text-amber-500" /> Kuota Gratis Harian
+                                    </span>
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${usageCount >= MAX_USAGE_PER_DAY ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-700'}`}>
+                                        Sisa {Math.max(0, MAX_USAGE_PER_DAY - usageCount)} / {MAX_USAGE_PER_DAY} Akses
+                                    </span>
+                                </div>
+                                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full transition-all duration-500 ease-out ${usageCount >= MAX_USAGE_PER_DAY ? 'bg-red-500' : 'bg-blue-500'}`} 
+                                      style={{ width: `${Math.min(100, (usageCount / MAX_USAGE_PER_DAY) * 100)}%` }}
+                                    ></div>
+                                </div>
+                                {usageCount >= MAX_USAGE_PER_DAY && (
+                                    <button 
+                                      onClick={() => {
+                                        toast.success("Berhasil klaim 5 akses tambahan via Premium Ads!");
+                                        setUsageCount(Math.max(0, usageCount - 5));
+                                        localStorage.setItem('cekfakta_usage_count', Math.max(0, usageCount - 5).toString());
+                                      }}
+                                      className="mt-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1 py-1.5 bg-blue-50 rounded-md border border-blue-100 transition-colors"
+                                    >
+                                      <Plus className="w-3 h-3" /> Tambah Kuota (Tonton Iklan)
+                                    </button>
+                                )}
+                            </div>
                             <Button 
                                 size="lg" 
                                 className="w-full py-6 bg-blue-600 text-white rounded-2xl font-bold text-base shadow-xl shadow-blue-200 hover:bg-blue-700 transition-transform active:scale-95"

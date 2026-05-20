@@ -96,20 +96,64 @@ export async function POST(req: NextRequest) {
       required: ["verdict", "confidenceScore", "explanation", "parentExplanationMode", "extractedClaims", "emotionalManipulation", "recommendation"],
     };
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: { parts: parts },
-      config: {
-        systemInstruction: `You are an expert fact-checker and misinformation analyst specializing in Indonesian social media content (WhatsApp, TikTok, Facebook). 
+    const configObj = {
+      systemInstruction: `You are an expert fact-checker and misinformation analyst specializing in Indonesian social media content (WhatsApp, TikTok, Facebook). 
 Analyze the input carefully. Identify emotional manipulation tactics. 
 Provide a "parent explanation mode" that uses polite, conversational Indonesian (e.g. "Bapak/Ibu, ini hoaks karena..."). 
-Keep the general explanation clear and helpful. Output ONLY JSON according to the schema.`,
-        responseMimeType: "application/json",
-        responseSchema: responseSchema,
-        tools: [{ googleSearch: {} }],
-        toolConfig: { includeServerSideToolInvocations: true },
-      },
-    });
+Keep the general explanation clear and helpful.
+
+CRITICAL RULES:
+1. DO NOT hallucinate or make up facts. Your analysis MUST be based on real, verifiable information.
+2. Use Google Search grounding to validate claims.
+3. Prioritize these Trusted Sources for Indonesia when checking facts:
+   - Kominfo (hoax references)
+   - TurnBackHoax (fact checking)
+   - WHO (health/kesehatan)
+   - Kemenkes (Indonesian medical)
+   - BMKG (weather/disasters)
+   - Tempo Cek Fakta (news verification)
+
+Output ONLY JSON according to the schema.`,
+      responseMimeType: "application/json",
+      responseSchema: responseSchema,
+      tools: [{ googleSearch: {} }],
+      toolConfig: { includeServerSideToolInvocations: true },
+    };
+
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: { parts: parts },
+        config: configObj,
+      });
+    } catch (primaryError: any) {
+      console.warn("Primary model (gemini-2.0-flash) failed, attempting fallback:", primaryError.message);
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-1.5-flash",
+          contents: { parts: parts },
+          config: configObj,
+        });
+      } catch (fallbackError: any) {
+        console.error("Fallback model (gemini-1.5-flash) also failed:", fallbackError.message);
+        // Return mock fallback response on API rate limit / quota exceeded
+        return NextResponse.json({
+          verdict: "Perlu Verifikasi",
+          confidenceScore: 50,
+          explanation: "Sistem AI kami sedang mencapai batas kapasitas harian (Quota Exceeded Limit). Tolong pastikan untuk memverifikasi informasi secara mandiri via Google atau sumber resmi melalui Google Pencarian.",
+          parentExplanationMode: "Bapak/Ibu, sistem pengecek otomatis kami sedang penuh kapasitasnya saat ini dan sibuk. Kami tidak bisa memeriksa secara akurat. Tolong jangan disebarkan dulu pesannya sebelum dicek kebenarannya secara langsung ya.",
+          extractedClaims: ["Sistem perlindungan misinformasi sedang overcapacity (Quota limit)"],
+          emotionalManipulation: {
+            isManipulative: true,
+            tactics: ["Tidak Dapat Dianalisis"],
+            explanation: "Sistem sedang sibuk. Mohon berhati-hati terhadap pesan yang menimbulkan kepanikan."
+          },
+          recommendation: "Pesan tidak dapat divalidasi. Jangan sebarkan dulu.",
+          sources: []
+        });
+      }
+    }
 
     let jsonStr = response.text?.trim() || "{}";
     let analysis;
