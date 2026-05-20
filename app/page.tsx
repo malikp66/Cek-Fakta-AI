@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import ShaderBackground from "@/components/shader-background";
 
 type ResultData = {
@@ -54,8 +56,11 @@ const Navbar = () => {
 };
 
 export default function Home() {
+  const [emblaRef] = useEmblaCarousel({ loop: true, align: 'start' }, [Autoplay({ delay: 3000, stopOnInteraction: true })]);
   const [activeTab, setActiveTab] = useState("text");
   const [usageCount, setUsageCount] = useState(0);
+  const [radarData, setRadarData] = useState<any[]>([]);
+  const [isLoadingRadar, setIsLoadingRadar] = useState(true);
   const MAX_USAGE_PER_DAY = 5;
 
   useEffect(() => {
@@ -70,6 +75,20 @@ export default function Home() {
     } else {
       setUsageCount(parseInt(storedCount || '0', 10));
     }
+
+    // Fetch TurnBackHoax data
+    fetch('/api/turnbackhoax')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRadarData(data);
+        }
+        setIsLoadingRadar(false);
+      })
+      .catch(err => {
+        console.error("Failed to load radar data", err);
+        setIsLoadingRadar(false);
+      });
   }, []);
   const [textInput, setTextInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -223,78 +242,119 @@ export default function Home() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                   </span>
-                  Gemini 2.0 AI Powered
+                  Indonesia Anti-Hoax Intelligence
               </div>
 
               <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                  Jangan Sebarkan Sebelum <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Cek Fakta.</span>
+                  Jangan Sebarkan Sebelum<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Verifikasi.</span>
               </h1>
               
               <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-                  AI membantu masyarakat Indonesia memahami informasi dengan kritis. Deteksi manipulasi emosi, verifikasi klaim, dan dapatkan penjelasan sederhana dalam hitungan detik.
+                  Platform intelijen AI pertama untuk mendeteksi manipulasi emosi, scam finansial, dan hoaks viral di Indonesia. Dapatkan analisis mendalam secara instan.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                   <Button 
                       onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="w-full sm:w-auto px-8 py-6 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-xl shadow-blue-200 transition-transform active:scale-95"
+                      className="w-full sm:w-auto px-8 py-6 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg shadow-xl shadow-slate-200 transition-transform active:scale-95"
                   >
                       <Search className="w-5 h-5 mr-2" />
-                      Cek Informasi Gratis
+                      Mulai Pengecekan
                   </Button>
                   <Button 
                       variant="outline"
-                      onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                      onClick={() => document.getElementById('live-radar')?.scrollIntoView({ behavior: 'smooth' })}
                       className="w-full sm:w-auto px-8 py-6 rounded-full border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-lg transition-colors"
                   >
-                      <Play className="w-5 h-5 mr-2 text-slate-500" />
-                      Lihat Cara Kerja
+                      <Activity className="w-5 h-5 mr-2 text-red-500" />
+                      Live Hoax Radar
                   </Button>
               </div>
           </motion.div>
+      </section>
 
-          {/* Animated Mockup Hook */}
-          <motion.div 
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="w-full max-w-5xl mx-auto mt-20 relative"
-          >
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl md:rounded-[2rem] blur-xl md:blur-2xl opacity-20 animate-pulse"></div>
-              <div className="relative bg-white rounded-2xl md:rounded-[2rem] border border-slate-200 shadow-2xl overflow-hidden p-6 md:p-10 flex flex-col md:flex-row items-center gap-8">
-                  <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg> 
-                          </div>
-                          <div className="text-left">
-                              <h3 className="font-bold text-slate-900">Pesan WhatsApp Mencurigakan</h3>
-                              <p className="text-xs text-slate-500">Diteruskan Berkali-kali di Grup Keluarga</p>
-                          </div>
-                      </div>
-                      <div className="bg-slate-100 rounded-xl p-4 md:p-6 text-slate-700 text-sm md:text-base border-l-4 border-orange-400 text-left relative overflow-hidden">
-                          <div className="absolute top-0 right-0 h-full w-32 bg-gradient-to-r from-transparent to-white/50 animate-[shimmer_2s_infinite]"></div>
-                          &quot;Bapak Ibu cepat kosongkan tabungan di bank X! Tadi pagi direkturnya kabur bawa triliunan, sore ini bank akan dibekukan pemerintah! Tolong sebarkan supaya saudara kita selamat!&quot;
-                      </div>
+      {/* LIVE HOAX RADAR SECTION */}
+      <section id="live-radar" className="py-20 bg-slate-50 border-t border-slate-200 relative z-10 px-6">
+          <div className="max-w-7xl mx-auto space-y-12">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                  <div>
+                      <h2 className="text-3xl font-bold flex items-center gap-3">
+                          <span className="relative flex h-4 w-4">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+                          </span>
+                          Trending Hoax & Scam
+                      </h2>
+                      <p className="text-slate-500 mt-2 font-medium">Ancaman misinformasi yang sedang viral di Indonesia hari ini.</p>
                   </div>
-                  <div className="w-full md:w-auto flex flex-col gap-4 text-left">
-                      <div className="flex items-center gap-3 bg-red-50 text-red-700 px-4 py-3 rounded-xl border border-red-100 shadow-sm animate-bounce">
-                          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                          <div className="text-sm">
-                              <span className="font-bold block">Manipulasi Terdeteksi</span>
-                              Urgensi Palsu & Rasa Takut Tinggi
-                          </div>
-                      </div>
-                      <div className="flex items-center gap-3 bg-green-50 text-green-700 px-4 py-3 rounded-xl border border-green-100 shadow-sm opacity-90">
-                          <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-                          <div className="text-sm">
-                              <span className="font-bold block">Verifikasi Sumber</span>
-                              Kementerian Keuangan RI (Tidak Ada Bukti)
-                          </div>
-                      </div>
+                  <div className="text-sm font-bold text-slate-500 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-blue-500"/> Data dari TurnBackHoax & CekFakta
                   </div>
               </div>
-          </motion.div>
+
+              <div className="overflow-hidden w-full -ml-6" ref={emblaRef}>
+                <div className="flex touch-pan-y" style={{ backfaceVisibility: 'hidden' }}>
+                  {isLoadingRadar ? (
+                      Array.from({length: 4}).map((_, i) => (
+                         <div key={i} className="flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] min-w-0 pl-6">
+                             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-pulse h-64"></div>
+                         </div>
+                      ))
+                  ) : radarData.length > 0 ? (
+                      radarData.map((item, i) => {
+                          let imgUrl = item._embedded?.['wp:featuredmedia']?.[0]?.source_url || item.yoast_head_json?.og_image?.[0]?.url || '';
+                          if (!imgUrl && item.content?.rendered) {
+                              const match = item.content.rendered.match(/<img[^>]+src="([^">]+)"/);
+                              if (match) imgUrl = match[1];
+                          }
+                          const title = item.title?.rendered ? item.title.rendered.replace(/&#[0-9]+;/g, '') : "Hoax";
+                          const cleanTitle = title.replace(/<[^>]*>?/gm, '');
+
+                          return (
+                              <div key={i} className="flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] min-w-0 pl-6">
+                                <div className="h-full bg-white border border-slate-200 rounded-2xl p-0 shadow-sm hover:shadow-xl transition-all group cursor-pointer overflow-hidden flex flex-col" onClick={() => {
+                                    document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>
+                                    {imgUrl ? (
+                                        <div className="h-40 w-full bg-slate-100 overflow-hidden relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={imgUrl} alt={cleanTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
+                                                <span className="relative flex h-2 w-2 mr-1">
+                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                                </span>
+                                                Live Alert
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="h-40 w-full bg-slate-100 flex items-center justify-center">
+                                            <Shield className="w-8 h-8 text-slate-300" />
+                                        </div>
+                                    )}
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <h3 className="font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors text-sm line-clamp-3 leading-snug">{cleanTitle}</h3>
+                                        <div className="mt-auto pt-4 flex justify-between items-center border-t border-slate-100">
+                                            <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3 text-red-500" /> Mafindo</span>
+                                            <span className="text-[10px] font-bold text-slate-400">{new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                              </div>
+                          )
+                      })
+                  ) : null }
+                </div>
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                <a href="https://turnbackhoax.id/" target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="rounded-full px-6 py-6 border-slate-300 text-slate-700 hover:bg-slate-100 font-bold">
+                        Lihat Lebih Banyak <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                </a>
+              </div>
+          </div>
       </section>
 
       {/* THREAT INTELLIGENCE MARQUEE */}
@@ -315,11 +375,11 @@ export default function Home() {
           </div>
       </div>
 
-      {/* FEATURES BENTO GRID */}
+      {/* AI SCAM INTELLIGENCE */}
       <section id="features" className="py-24 px-6 max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Lebih dari Sekadar Pengecek Fakta.</h2>
-              <p className="text-lg text-slate-500">Platform intelligence yang didesain untuk menangkal ancaman misinformasi di grup keluarga Anda secara emosional dan logika.</p>
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight">AI Scam & Manipulation Intelligence.</h2>
+              <p className="text-lg text-slate-500">Bukan sekadar pembaca teks. Kami membedah <i>psychological warfare</i>, pola manipulasi, dan memetakan taktik penipuan sebelum Anda menjadi korban.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -331,7 +391,7 @@ export default function Home() {
                           <AlertOctagon className="w-6 h-6" />
                       </div>
                       <h3 className="text-2xl font-bold mb-3">Deteksi Manipulasi Emosi</h3>
-                      <p className="text-slate-500 leading-relaxed">Pesan hoax sering memicu kepanikan, kemarahan, atau urgensi palsu. AI kami memetakan manipulasi ini agar Anda bisa berpikir lebih jernih.</p>
+                      <p className="text-slate-500 leading-relaxed">Scam modern menyerang psikologis. AI kami mendeteksi pola <i>urgensi palsu</i>, <i>fear-mongering</i> (menakut-nakuti), dan penyalahgunaan otoritas.</p>
                   </div>
                   <div className="w-full xl:w-72 h-auto bg-slate-50 rounded-xl border border-slate-100 p-6 flex flex-col gap-4 z-10 my-auto">
                         <div className="flex justify-between text-sm font-bold text-slate-700"><span>Rasa Takut (Fear)</span><span className="text-red-500">95%</span></div>
@@ -342,14 +402,18 @@ export default function Home() {
                   </div>
               </div>
 
-              {/* Bento Box 2 */}
-              <div className="bg-white border border-slate-200 rounded-[2rem] p-8 lg:p-10 shadow-sm hover:shadow-xl transition-all group">
-                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
-                      <HeartHandshake className="w-6 h-6" />
+              {/* Bento Box 2: Indonesia Scam Map (Mock) */}
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-8 lg:p-10 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+                  <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-6 relative z-10">
+                      <Target className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3">Jelaskan ke Orang Tua</h3>
-                  <p className="text-slate-500 leading-relaxed mb-6 text-sm lg:text-base">Penalaran teknis rumit dipahami lansia. Kami menyediakan template bahasa santun, sederhana, dan tidak menggurui untuk membalas pesan keluarga.</p>
-                  <div className="text-sm font-medium italic text-purple-700 bg-purple-50 p-4 rounded-xl border border-purple-100">&quot;Pak, Bu, info dari WA itu kurang tepat. Jangan disebarkan ya supaya teman lain terhindar dari bahaya...&quot;</div>
+                  <h3 className="text-2xl font-bold mb-3 relative z-10">Peta Scam Indonesia</h3>
+                  <div className="space-y-3 mt-6 relative z-10">
+                      <div className="flex justify-between items-center text-sm"><span className="font-bold text-slate-700">Jakarta</span><span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Scam QRIS</span></div>
+                      <div className="flex justify-between items-center text-sm"><span className="font-bold text-slate-700">Surabaya</span><span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Loker Palsu</span></div>
+                      <div className="flex justify-between items-center text-sm"><span className="font-bold text-slate-700">Bandung</span><span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Penipuan Paket</span></div>
+                  </div>
+                  <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-110 transition-transform"><Target className="w-64 h-64" /></div>
               </div>
 
               {/* Bento Box 3 */}
@@ -360,7 +424,7 @@ export default function Home() {
                           <Mic className="w-6 h-6" />
                       </div>
                       <h3 className="text-2xl font-bold mb-3">Analisis Voice Note</h3>
-                      <p className="text-slate-400 leading-relaxed text-sm lg:text-base">Sering mendapat ceramah audio hoax? Unggah Voice Note, AI kami mentranskrip dan menganalisis isinya secara realtime.</p>
+                      <p className="text-slate-400 leading-relaxed text-sm lg:text-base">Scam sekarang menggunakan <i>AI Voice Cloning</i>. Unggah Voice Note mencurigakan, kami bedah intonasi dan transkripnya secara realtime.</p>
                   </div>
               </div>
 
@@ -371,7 +435,7 @@ export default function Home() {
                           <Globe className="w-6 h-6" />
                       </div>
                       <h3 className="text-2xl font-bold mb-3">Referensi Terpercaya (Trusted Sources)</h3>
-                      <p className="text-slate-500 leading-relaxed">Setiap kesimpulan AI divalidasi silang menggunakan mesin pencari khusus, memprioritaskan situs resmi kesehatan dan pemerintah.</p>
+                      <p className="text-slate-500 leading-relaxed">Setiap kesimpulan AI divalidasi silang menggunakan mesin pencari khusus, memprioritaskan situs cek fakta kolaboratif, pedoman kesehatan, dan data pemerintah.</p>
                   </div>
                   <div className="flex-1 grid grid-cols-2 gap-4 w-full">
                         <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -392,7 +456,7 @@ export default function Home() {
                         <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/WHO_logo.svg/512px-WHO_logo.svg.png" alt="WHO" className="w-6 h-6 object-contain" />
-                            <span className="font-bold text-xs text-slate-700">WHO Guidelines</span>
+                            <span className="font-bold text-xs text-slate-700" style={{ letterSpacing: "-0.05em" }}>WHO Guidelines</span>
                         </div>
                   </div>
               </div>
@@ -410,12 +474,12 @@ export default function Home() {
               </div>
 
               {/* Ecosystem UI App */}
-              <div className="bg-slate-50 text-slate-900 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col lg:flex-row min-h-[600px] border border-slate-700/50">
+              <div className="bg-slate-50 text-slate-900 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col lg:flex-row lg:items-stretch lg:min-h-[550px] border border-slate-700/50">
                 
                 {/* Left Panel: Input Section */}
-                <div className="w-full lg:w-[420px] bg-white border-r border-slate-200 p-6 lg:p-8 flex flex-col shrink-0 relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-                  <motion.div className="flex-1 flex flex-col h-full">
-                    <Tabs defaultValue="text" onValueChange={setActiveTab} className="w-full h-full flex flex-col space-y-6">
+                <div className="w-full lg:w-[420px] bg-white border-r border-slate-200 p-6 lg:p-8 flex flex-col shrink-0 relative z-10 shadow-[2px_0_12px_rgba(0,0,0,0.02)]">
+                  <motion.div className="flex flex-col flex-1">
+                    <Tabs defaultValue="text" onValueChange={setActiveTab} className="w-full flex-1 flex flex-col gap-6">
                       <TabsList className="grid w-full grid-cols-3 gap-2 bg-transparent h-auto p-0">
                         <TabsTrigger value="text" className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:border-blue-500 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm transition-all focus:ring-0">
                           <FileText className="w-4 h-4 mr-2" /> Teks
@@ -427,31 +491,57 @@ export default function Home() {
                           <Mic className="w-4 h-4 mr-2" /> Audio
                         </TabsTrigger>
                       </TabsList>
-                      <div className="flex-1">
-                        <TabsContent value="text" className="mt-0 h-full">
-                          <div className="relative group h-full">
+                      <div className="flex-1 flex flex-col">
+                        <TabsContent value="text" className="mt-0 flex flex-col flex-1">
+                          <div className="relative group flex flex-col">
                             <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">Konten untuk Dicek</Label>
                             <Textarea 
                               placeholder="Paste pesan WhatsApp mencurigakan di sini..."
-                              className="w-full h-48 lg:h-64 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-transparent outline-none resize-none text-slate-900"
+                              className="w-full min-h-[140px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-transparent outline-none resize-none text-slate-900"
                               value={textInput}
                               onChange={(e) => setTextInput(e.target.value)}
                             />
-                            {/* Live Suggestion Demo Button */}
-                            <button 
-                                onClick={() => {
-                                    setTextInput("BAHAYA! Jangan makan buah pisang dicampur susu! Hal ini akan menyebabkan asam urat dan racun mematikan di dalam perut. Dr. Setiawan sudah membuktikan banyak korban masuk IGD. Viralkan!");
-                                    toast.info("Contoh teks dimasukkan. Silakan mulai analisis.");
-                                }}
-                                className="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            >
-                                <Play className="w-3 h-3" /> Masukkan contoh Hoax Kesehatan
-                            </button>
+                            
+                            {/* Try Viral Cases */}
+                            <div className="mt-4 border-t border-slate-100 pt-3">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 block flex items-center gap-1">
+                                    <Activity className="w-3 h-3" /> Coba Kasus Viral:
+                                </Label>
+                                <div className="flex flex-wrap gap-2">
+                                    <button 
+                                        onClick={() => {
+                                            setTextInput("Yth. Nasabah BCA, kartu ATM Anda akan diblokir malam ini karena pergantian sistem. Untuk membatalkan pemblokiran, segera klik link berikut: http://bca-upgrade-v2.com/login dan isi data Anda dengan benar. Abaikan pesan ini jika Anda ingin rekening diblokir selamanya.");
+                                            toast.info("Contoh Scam Finansial (Phishing) dimasukkan.");
+                                        }}
+                                        className="text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-red-50 hover:text-red-700 px-2 py-1.5 rounded-lg border border-slate-200 transition-colors"
+                                    >
+                                        💳 Phishing Bank
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setTextInput("BAHAYA! Jangan makan buah pisang dicampur susu! Hal ini akan menyebabkan asam urat dan racun mematikan di dalam perut. Dr. Setiawan sudah membuktikan banyak korban masuk IGD. Viralkan!");
+                                            toast.info("Contoh Hoax Kesehatan dimasukkan.");
+                                        }}
+                                        className="text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 px-2 py-1.5 rounded-lg border border-slate-200 transition-colors"
+                                    >
+                                        🍌 Hoax Kesehatan
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setTextInput("[INFO RESMI] Lowongan Kerja Pertamina 2026. Gaji Pokok 15-20 Juta. Fasilitas lengkap. Syarat mudah, cukup bayar biaya administrasi tes seragam Rp 250.000 ke rekening bendahara HRD: 082392xxx. Kuota Terbatas!");
+                                            toast.info("Contoh Loker Palsu dimasukkan.");
+                                        }}
+                                        className="text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 px-2 py-1.5 rounded-lg border border-slate-200 transition-colors"
+                                    >
+                                        🏢 Loker Palsu
+                                    </button>
+                                </div>
+                            </div>
                           </div>
                         </TabsContent>
                         
-                        <TabsContent value="image" className="mt-0 h-full">
-                          <div className="h-48 lg:h-64 border border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors flex flex-col items-center justify-center relative group cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
+                        <TabsContent value="image" className="mt-0 h-full flex flex-col flex-1">
+                          <div className="flex-1 min-h-[140px] border border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors flex flex-col items-center justify-center relative group cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
                             <input 
                               type="file" accept="image/*" onChange={handleImageUpload}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -467,8 +557,8 @@ export default function Home() {
                           </div>
                         </TabsContent>
 
-                        <TabsContent value="audio" className="mt-0 h-full">
-                          <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-2xl h-48 lg:h-64 gap-6">
+                        <TabsContent value="audio" className="mt-0 h-full flex flex-col flex-1">
+                          <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-2xl flex-1 min-h-[140px] gap-6">
                             {audioUrl ? (
                               <div className="w-full space-y-4">
                                   <audio src={audioUrl} controls className="w-full h-12" />
@@ -494,8 +584,8 @@ export default function Home() {
                           </div>
                         </TabsContent>
 
-                        <div className="mt-auto pt-4 flex flex-col gap-2">
-                            <div className="flex flex-col gap-2 px-3 py-3 bg-slate-100/50 rounded-xl border border-slate-200/50 mb-2 mt-4">
+                        <div className="mt-8 flex flex-col gap-2 shrink-0">
+                            <div className="flex flex-col gap-2 px-3 py-3 bg-slate-100/50 rounded-xl border border-slate-200/50 mb-2">
                                 <div className="flex justify-between items-center">
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                                       <Zap className="w-3 h-3 text-amber-500" /> Kuota Gratis Harian
